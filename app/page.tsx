@@ -1,9 +1,16 @@
-import React from "react";
+"use client";
+import React, { useRef } from "react";
+import Webcam from "react-webcam";
 
 type Props = {};
 
 const HomePage = (props: Props) => {
-  return <div>HomePage</div>;
+  const webcamRef = useRef<Webcam>(null);
+  return (
+    <div>
+      <Webcam />
+    </div>
+  );
 };
 
 export default HomePage;
