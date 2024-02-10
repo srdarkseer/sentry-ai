@@ -7,6 +7,13 @@ import { ModeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
+import { beep } from "@/utils/audio";
+import {
   Camera,
   FlipHorizontal,
   Moon,
@@ -15,13 +22,9 @@ import {
   Video,
   Volume2,
 } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Slider } from "@/components/ui/slider";
-import { beep } from "@/utils/audio";
+import * as cocossd from "@tensorflow-models/coco-ssd";
+import "@tensorflow/tfjs-backend-cpu";
+import "@tensorflow/tfjs-backend-webgl";
 
 type Props = {};
 
