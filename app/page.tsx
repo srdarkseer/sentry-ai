@@ -1,12 +1,25 @@
 "use client";
 import React, { useRef, useState } from "react";
 import Webcam from "react-webcam";
+import { Rings } from "react-loader-spinner";
 import { Separator } from "@/components/ui/separator";
 import { ModeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Camera, FlipHorizontal, PersonStanding, Video } from "lucide-react";
-import { Rings } from "react-loader-spinner";
+import {
+  Camera,
+  FlipHorizontal,
+  PersonStanding,
+  Video,
+  Volume2,
+} from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
+import { beep } from "@/utils/audio";
 
 type Props = {};
 
@@ -17,6 +30,7 @@ const HomePage = (props: Props) => {
   const [mirrored, setMirrored] = useState<boolean>(true);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [autoRecordEnabled, setAutoRecordEnabled] = useState<boolean>(false);
+  const [volume, setVolume] = useState(0.8);
   return (
     <div className="flex h-screen">
       {/* Left division - webcam and Canvas */}
@@ -90,7 +104,28 @@ const HomePage = (props: Props) => {
 
           {/* Bottom section */}
           <div className="flex flex-col gap-2">
-            <Separator />
+            <Separator className="my-2" />
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Volume2 />
+                </Button>
+              </PopoverTrigger>
+
+              <PopoverContent>
+                <Slider
+                  max={1}
+                  min={0}
+                  step={0.2}
+                  defaultValue={[volume]}
+                  onValueCommit={(val) => {
+                    setVolume(val[0]);
+                    beep(val[0]);
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </div>
