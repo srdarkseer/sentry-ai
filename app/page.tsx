@@ -4,6 +4,7 @@ import Webcam from "react-webcam";
 import { Separator } from "@/components/ui/separator";
 import { ModeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { FlipHorizontal } from "lucide-react";
 
 type Props = {};
 
@@ -35,6 +36,15 @@ const HomePage = (props: Props) => {
           {/* Top section */}
           <div className="flex flex-col gap-2">
             <ModeToggle />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                setMirrored((prev) => !prev);
+              }}
+            >
+              <FlipHorizontal />
+            </Button>
 
             <Separator />
           </div>
