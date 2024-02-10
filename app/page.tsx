@@ -4,7 +4,8 @@ import Webcam from "react-webcam";
 import { Separator } from "@/components/ui/separator";
 import { ModeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { FlipHorizontal } from "lucide-react";
+import { toast } from "sonner";
+import { Camera, FlipHorizontal, PersonStanding, Video } from "lucide-react";
 
 type Props = {};
 
@@ -13,6 +14,8 @@ const HomePage = (props: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [mirrored, setMirrored] = useState<boolean>(true);
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [autoRecordEnabled, setAutoRecordEnabled] = useState<boolean>(false);
   return (
     <div className="flex h-screen">
       {/* Left division - webcam and Canvas */}
@@ -46,14 +49,38 @@ const HomePage = (props: Props) => {
               <FlipHorizontal />
             </Button>
 
-            <Separator />
+            <Separator className="my-2" />
           </div>
 
           {/* Middle section */}
           <div className="flex flex-col gap-2">
-            <Separator />
+            <Separator className="my-2" />
 
-            <Separator />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={userPromptScreenshot}
+            >
+              <Camera />
+            </Button>
+
+            <Button
+              variant={isRecording ? "destructive" : "outline"}
+              size="icon"
+              onClick={userPromptRecord}
+            >
+              <Video />
+            </Button>
+
+            <Separator className="my-2" />
+
+            <Button
+              variant={autoRecordEnabled ? "destructive" : "outline"}
+              size="icon"
+              onClick={toggleAutoRecord}
+            >
+              {autoRecordEnabled ? "Show animation" : <PersonStanding />}
+            </Button>
           </div>
 
           {/* Bottom section */}
@@ -64,6 +91,23 @@ const HomePage = (props: Props) => {
       </div>
     </div>
   );
+
+  // Function to take a screenshot
+  function userPromptScreenshot() {}
+
+  // Function to start/stop recording
+  function userPromptRecord() {}
+
+  // Function to toggle auto recording
+  function toggleAutoRecord() {
+    if (autoRecordEnabled) {
+      setAutoRecordEnabled(false);
+      toast("Auto recording has been disabled.");
+    } else {
+      setAutoRecordEnabled(true);
+      toast("Auto recording has been enabled.");
+    }
+  }
 };
 
 export default HomePage;
