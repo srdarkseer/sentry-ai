@@ -6,6 +6,7 @@ import { ModeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Camera, FlipHorizontal, PersonStanding, Video } from "lucide-react";
+import { Rings } from "react-loader-spinner";
 
 type Props = {};
 
@@ -79,7 +80,11 @@ const HomePage = (props: Props) => {
               size="icon"
               onClick={toggleAutoRecord}
             >
-              {autoRecordEnabled ? "Show animation" : <PersonStanding />}
+              {autoRecordEnabled ? (
+                <Rings color="white" height={45} />
+              ) : (
+                <PersonStanding />
+              )}
             </Button>
           </div>
 
