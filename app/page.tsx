@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Webcam from "react-webcam";
 import { Rings } from "react-loader-spinner";
 import { Separator } from "@/components/ui/separator";
@@ -25,6 +25,7 @@ import {
 import * as cocossd from "@tensorflow-models/coco-ssd";
 import "@tensorflow/tfjs-backend-cpu";
 import "@tensorflow/tfjs-backend-webgl";
+import { ObjectDetection } from "@tensorflow-models/coco-ssd";
 
 type Props = {};
 
@@ -36,6 +37,19 @@ const HomePage = (props: Props) => {
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [autoRecordEnabled, setAutoRecordEnabled] = useState<boolean>(false);
   const [volume, setVolume] = useState(0.8);
+  const [model, setModel] = useState<ObjectDetection>();
+
+  useEffect(() => {
+    initModel();
+  }, []);
+
+  async function initModel() {
+    const loadedModel: ObjectDetection = await cocossd.load({
+      base: "mobilenet_v2",
+    });
+    setModel(loadedModel);
+  }
+
   return (
     <div className="flex h-screen">
       {/* Left division - webcam and Canvas */}
