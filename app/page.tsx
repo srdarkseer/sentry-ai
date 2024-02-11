@@ -38,8 +38,10 @@ const HomePage = (props: Props) => {
   const [autoRecordEnabled, setAutoRecordEnabled] = useState<boolean>(false);
   const [volume, setVolume] = useState(0.8);
   const [model, setModel] = useState<ObjectDetection>();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
     initModel();
   }, []);
 
@@ -49,6 +51,12 @@ const HomePage = (props: Props) => {
     });
     setModel(loadedModel);
   }
+
+  useEffect(() => {
+    if (model) {
+      setLoading(false);
+    }
+  }, [model]);
 
   return (
     <div className="flex h-screen">
@@ -152,6 +160,11 @@ const HomePage = (props: Props) => {
           <RenderFeatureHighlightsSection />
         </div>
       </div>
+      {loading && (
+        <div className="z-50 absolute w-full h-full flex items-center justify-center bg-primary-foreground">
+          Getting things ready . . . <Rings height={50} color="red" />
+        </div>
+      )}
     </div>
   );
 
