@@ -82,7 +82,7 @@ const HomePage = (props: Props) => {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [webcamRef.current, model]);
+  }, [webcamRef.current, model, mirrored]);
 
   return (
     <div className="flex h-screen">
