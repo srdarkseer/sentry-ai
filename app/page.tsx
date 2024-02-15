@@ -132,101 +132,108 @@ const HomePage = (props: Props) => {
 
   return (
     <div className="flex h-screen">
-      {/* Left division - webcam and Canvas  */}
-      <div className="relative">
-        <div className="relative h-screen w-full">
-          <Webcam
-            ref={webcamRef}
-            mirrored={mirrored}
-            className="h-full w-full object-contain p-2"
-          />
-          <canvas
-            ref={canvasRef}
-            className="absolute top-0 left-0 h-full w-full object-contain"
-          ></canvas>
+      <div className="grid grid-cols-12">
+        {/* Left division - webcam and Canvas  */}
+        <div className="col-span-9">
+          <div className="relative">
+            <div className="relative h-screen w-full">
+              <Webcam
+                ref={webcamRef}
+                mirrored={mirrored}
+                className="h-full w-full object-contain p-2 rounded-lg"
+              />
+              <canvas
+                ref={canvasRef}
+                className="absolute top-0 left-0 h-full w-full object-contain"
+              ></canvas>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Right division - container for button panel and wiki section */}
-      <div className="flex flex-row flex-1">
-        <div className="border-primary/5 border-2 max-w-xs flex flex-col gap-2 justify-between shadow-md rounded-md p-4">
-          {/* Top section */}
-          <div className="flex flex-col gap-2">
-            <ModeToggle />
-            <Button
-              variant={"outline"}
-              size={"icon"}
-              onClick={() => {
-                setMirrored((prev) => !prev);
-              }}
-            >
-              <FlipHorizontal />
-            </Button>
-
-            <Separator className="my-2" />
-          </div>
-
-          {/* Middle section */}
-          <div className="flex flex-col gap-2">
-            <Separator className="my-2" />
-            <Button
-              variant={"outline"}
-              size={"icon"}
-              onClick={userPromptScreenshot}
-            >
-              <Camera />
-            </Button>
-            <Button
-              variant={isRecording ? "destructive" : "outline"}
-              size={"icon"}
-              onClick={userPromptRecord}
-            >
-              <Video />
-            </Button>
-            <Separator className="my-2" />
-            <Button
-              variant={autoRecordEnabled ? "destructive" : "outline"}
-              size={"icon"}
-              onClick={toggleAutoRecord}
-            >
-              {autoRecordEnabled ? (
-                <Rings color="white" height={45} />
-              ) : (
-                <PersonStanding />
-              )}
-            </Button>
-          </div>
-
-          {/* Bottom section */}
-          <div className="flex flex-col gap-2">
-            <Separator className="my-2" />
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant={"outline"} size={"icon"}>
-                  <Volume2 />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent>
-                <Slider
-                  max={1}
-                  min={0}
-                  step={0.2}
-                  defaultValue={[volume]}
-                  onValueCommit={(val) => {
-                    setVolume(val[0]);
-                    beep(val[0]);
+        <div className="col-span-3">
+          {/* Right division - container for button panel and wiki section */}
+          <div className="flex flex-row pt-3">
+            <div className="border-primary/5 border-2 max-w-xs flex flex-col gap-2 justify-between shadow-md rounded-md  p-4">
+              {/* Top section */}
+              <div className="flex flex-col gap-2">
+                <ModeToggle />
+                <Button
+                  variant={"outline"}
+                  size={"icon"}
+                  onClick={() => {
+                    setMirrored((prev) => !prev);
                   }}
-                />
-              </PopoverContent>
-            </Popover>
+                >
+                  <FlipHorizontal />
+                </Button>
+
+                <Separator className="my-2" />
+              </div>
+
+              {/* Middle section */}
+              <div className="flex flex-col gap-2">
+                <Separator className="my-2" />
+                <Button
+                  variant={"outline"}
+                  size={"icon"}
+                  onClick={userPromptScreenshot}
+                >
+                  <Camera />
+                </Button>
+                <Button
+                  variant={isRecording ? "destructive" : "outline"}
+                  size={"icon"}
+                  onClick={userPromptRecord}
+                >
+                  <Video />
+                </Button>
+                <Separator className="my-2" />
+                <Button
+                  variant={autoRecordEnabled ? "destructive" : "outline"}
+                  size={"icon"}
+                  onClick={toggleAutoRecord}
+                >
+                  {autoRecordEnabled ? (
+                    <Rings color="white" height={45} />
+                  ) : (
+                    <PersonStanding />
+                  )}
+                </Button>
+              </div>
+
+              {/* Bottom section */}
+              <div className="flex flex-col gap-2">
+                <Separator className="my-2" />
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant={"outline"} size={"icon"}>
+                      <Volume2 />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <Slider
+                      max={1}
+                      min={0}
+                      step={0.2}
+                      defaultValue={[volume]}
+                      onValueCommit={(val) => {
+                        setVolume(val[0]);
+                        beep(val[0]);
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            <div className="h-full flex-1 py-4 px-2 overflow-y-scroll">
+              <RenderFeatureHighlightsSection />
+            </div>
           </div>
         </div>
-
-        <div className="h-full flex-1 py-4 px-2 overflow-y-scroll">
-          <RenderFeatureHighlightsSection />
-        </div>
       </div>
+
       {loading && (
         <div className="z-50 absolute w-full h-full flex items-center justify-center bg-primary-foreground">
           Getting things ready . . . <Rings height={50} color="red" />
@@ -434,5 +441,5 @@ function base64toBlob(base64Data: any) {
     byteArray[i] = byteCharacters.charCodeAt(i);
   }
 
-  return new Blob([arrayBuffer], { type: "image/png" }); 
+  return new Blob([arrayBuffer], { type: "image/png" });
 }
