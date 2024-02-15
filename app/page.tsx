@@ -1,40 +1,44 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
-import Webcam from "react-webcam";
-import { Rings } from "react-loader-spinner";
-import { Separator } from "@/components/ui/separator";
 import { ModeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { beep } from "@/utils/audio";
 import {
   Camera,
+  Divide,
   FlipHorizontal,
-  Moon,
+  MoonIcon,
   PersonStanding,
-  Sun,
+  SunIcon,
   Video,
   Volume2,
 } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Rings } from "react-loader-spinner";
+import Webcam from "react-webcam";
+import { toast } from "sonner";
 import * as cocossd from "@tensorflow-models/coco-ssd";
 import "@tensorflow/tfjs-backend-cpu";
 import "@tensorflow/tfjs-backend-webgl";
 import { DetectedObject, ObjectDetection } from "@tensorflow-models/coco-ssd";
 import { drawOnCanvas } from "@/utils/draw";
+import SocialMediaLinks from "@/components/social-links";
 
 type Props = {};
 
 let interval: any = null;
+let stopTimeout: any = null;
 const HomePage = (props: Props) => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // state
   const [mirrored, setMirrored] = useState<boolean>(true);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [autoRecordEnabled, setAutoRecordEnabled] = useState<boolean>(false);
@@ -42,11 +46,42 @@ const HomePage = (props: Props) => {
   const [model, setModel] = useState<ObjectDetection>();
   const [loading, setLoading] = useState(false);
 
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+
+  // initialize the media recorder
+  useEffect(() => {
+    if (webcamRef && webcamRef.current) {
+      const stream = (webcamRef.current.video as any).captureStream();
+      if (stream) {
+        mediaRecorderRef.current = new MediaRecorder(stream);
+
+        mediaRecorderRef.current.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            const recordedBlob = new Blob([e.data], { type: "video" });
+            const videoURL = URL.createObjectURL(recordedBlob);
+
+            const a = document.createElement("a");
+            a.href = videoURL;
+            a.download = `${formatDate(new Date())}.webm`;
+            a.click();
+          }
+        };
+        mediaRecorderRef.current.onstart = (e) => {
+          setIsRecording(true);
+        };
+        mediaRecorderRef.current.onstop = (e) => {
+          setIsRecording(false);
+        };
+      }
+    }
+  }, [webcamRef]);
+
   useEffect(() => {
     setLoading(true);
     initModel();
   }, []);
 
+  // loads model
   async function initModel() {
     const loadedModel: ObjectDetection = await cocossd.load({
       base: "mobilenet_v2",
@@ -67,12 +102,23 @@ const HomePage = (props: Props) => {
       webcamRef.current.video &&
       webcamRef.current.video.readyState === 4
     ) {
-      const predictions: DetectedObject[] = await model.detect(webcamRef.current.video);
+      const predictions: DetectedObject[] = await model.detect(
+        webcamRef.current.video
+      );
 
       resizeCanvas(canvasRef, webcamRef);
       drawOnCanvas(mirrored, predictions, canvasRef.current?.getContext("2d"));
 
-      console.log(predictions);
+      let isPerson: boolean = false;
+      if (predictions.length > 0) {
+        predictions.forEach((prediction) => {
+          isPerson = prediction.class === "person";
+        });
+
+        if (isPerson && autoRecordEnabled) {
+          startRecording(true);
+        }
+      }
     }
   }
 
@@ -82,17 +128,17 @@ const HomePage = (props: Props) => {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [webcamRef.current, model, mirrored]);
+  }, [webcamRef.current, model, mirrored, autoRecordEnabled, runPrediction]);
 
   return (
     <div className="flex h-screen">
-      {/* Left division - webcam and Canvas */}
+      {/* Left division - webcam and Canvas  */}
       <div className="relative">
         <div className="relative h-screen w-full">
           <Webcam
             ref={webcamRef}
             mirrored={mirrored}
-            className="w-full h-full object-contain p-2"
+            className="h-full w-full object-contain p-2"
           />
           <canvas
             ref={canvasRef}
@@ -108,8 +154,8 @@ const HomePage = (props: Props) => {
           <div className="flex flex-col gap-2">
             <ModeToggle />
             <Button
-              variant="outline"
-              size="icon"
+              variant={"outline"}
+              size={"icon"}
               onClick={() => {
                 setMirrored((prev) => !prev);
               }}
@@ -123,28 +169,24 @@ const HomePage = (props: Props) => {
           {/* Middle section */}
           <div className="flex flex-col gap-2">
             <Separator className="my-2" />
-
             <Button
-              variant="outline"
-              size="icon"
+              variant={"outline"}
+              size={"icon"}
               onClick={userPromptScreenshot}
             >
               <Camera />
             </Button>
-
             <Button
               variant={isRecording ? "destructive" : "outline"}
-              size="icon"
+              size={"icon"}
               onClick={userPromptRecord}
             >
               <Video />
             </Button>
-
             <Separator className="my-2" />
-
             <Button
               variant={autoRecordEnabled ? "destructive" : "outline"}
-              size="icon"
+              size={"icon"}
               onClick={toggleAutoRecord}
             >
               {autoRecordEnabled ? (
@@ -161,11 +203,10 @@ const HomePage = (props: Props) => {
 
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="icon">
+                <Button variant={"outline"} size={"icon"}>
                   <Volume2 />
                 </Button>
               </PopoverTrigger>
-
               <PopoverContent>
                 <Slider
                   max={1}
@@ -194,24 +235,63 @@ const HomePage = (props: Props) => {
     </div>
   );
 
-  // Function to take a screenshot
-  function userPromptScreenshot() {}
-
-  // Function to start/stop recording
-  function userPromptRecord() {}
-
-  // Function to toggle auto recording
-  function toggleAutoRecord() {
-    if (autoRecordEnabled) {
-      setAutoRecordEnabled(false);
-      toast("Auto recording has been disabled.");
+  // handler functions
+  function userPromptScreenshot() {
+    if (!webcamRef.current) {
+      toast("Camera not found. Please refresh");
     } else {
-      setAutoRecordEnabled(true);
-      toast("Auto recording has been enabled.");
+      const imgSrc = webcamRef.current.getScreenshot();
+      console.log(imgSrc);
+      const blob = base64toBlob(imgSrc);
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${formatDate(new Date())}.png`;
+      a.click();
     }
   }
 
-  // Inner components
+  function userPromptRecord() {
+    if (!webcamRef.current) {
+      toast("Camera is not found. Please refresh.");
+    }
+
+    if (mediaRecorderRef.current?.state == "recording") {
+      mediaRecorderRef.current.requestData();
+      clearTimeout(stopTimeout);
+      mediaRecorderRef.current.stop();
+      toast("Recording saved to downloads");
+    } else {
+      startRecording(false);
+    }
+  }
+
+  function startRecording(doBeep: boolean) {
+    if (webcamRef.current && mediaRecorderRef.current?.state !== "recording") {
+      mediaRecorderRef.current?.start();
+      doBeep && beep(volume);
+
+      stopTimeout = setTimeout(() => {
+        if (mediaRecorderRef.current?.state === "recording") {
+          mediaRecorderRef.current.requestData();
+          mediaRecorderRef.current.stop();
+        }
+      }, 30000);
+    }
+  }
+
+  function toggleAutoRecord() {
+    if (autoRecordEnabled) {
+      setAutoRecordEnabled(false);
+      toast("Autorecord disabled");
+    } else {
+      setAutoRecordEnabled(true);
+      toast("Autorecord enabled");
+    }
+  }
+
+  // inner components
   function RenderFeatureHighlightsSection() {
     return (
       <div className="text-xs text-muted-foreground">
@@ -219,19 +299,52 @@ const HomePage = (props: Props) => {
           <li>
             <strong>Dark Mode/Sys Theme 🌗</strong>
             <p>Toggle between dark mode and system theme.</p>
+            <Button className="my-2 h-6 w-6" variant={"outline"} size={"icon"}>
+              <SunIcon size={14} />
+            </Button>{" "}
+            /{" "}
+            <Button className="my-2 h-6 w-6" variant={"outline"} size={"icon"}>
+              <MoonIcon size={14} />
+            </Button>
           </li>
           <li>
             <strong>Horizontal Flip ↔️</strong>
             <p>Adjust horizontal orientation.</p>
+            <Button
+              className="h-6 w-6 my-2"
+              variant={"outline"}
+              size={"icon"}
+              onClick={() => {
+                setMirrored((prev) => !prev);
+              }}
+            >
+              <FlipHorizontal size={14} />
+            </Button>
           </li>
           <Separator />
           <li>
             <strong>Take Pictures 📸</strong>
             <p>Capture snapshots at any moment from the video feed.</p>
+            <Button
+              className="h-6 w-6 my-2"
+              variant={"outline"}
+              size={"icon"}
+              onClick={userPromptScreenshot}
+            >
+              <Camera size={14} />
+            </Button>
           </li>
           <li>
             <strong>Manual Video Recording 📽️</strong>
             <p>Manually record video clips as needed.</p>
+            <Button
+              className="h-6 w-6 my-2"
+              variant={isRecording ? "destructive" : "outline"}
+              size={"icon"}
+              onClick={userPromptRecord}
+            >
+              <Video size={14} />
+            </Button>
           </li>
           <Separator />
           <li>
@@ -240,6 +353,18 @@ const HomePage = (props: Props) => {
               Option to enable/disable automatic video recording whenever
               required.
             </p>
+            <Button
+              className="h-6 w-6 my-2"
+              variant={autoRecordEnabled ? "destructive" : "outline"}
+              size={"icon"}
+              onClick={toggleAutoRecord}
+            >
+              {autoRecordEnabled ? (
+                <Rings color="white" height={30} />
+              ) : (
+                <PersonStanding size={14} />
+              )}
+            </Button>
           </li>
 
           <li>
@@ -257,6 +382,7 @@ const HomePage = (props: Props) => {
           <Separator />
           <li className="space-y-4">
             <strong>Share your thoughts 💬 </strong>
+            <SocialMediaLinks />
             <br />
             <br />
             <br />
@@ -281,4 +407,32 @@ function resizeCanvas(
     canvas.width = videoWidth;
     canvas.height = videoHeight;
   }
+}
+
+function formatDate(d: Date) {
+  const formattedDate =
+    [
+      (d.getMonth() + 1).toString().padStart(2, "0"),
+      d.getDate().toString().padStart(2, "0"),
+      d.getFullYear(),
+    ].join("-") +
+    " " +
+    [
+      d.getHours().toString().padStart(2, "0"),
+      d.getMinutes().toString().padStart(2, "0"),
+      d.getSeconds().toString().padStart(2, "0"),
+    ].join("-");
+  return formattedDate;
+}
+
+function base64toBlob(base64Data: any) {
+  const byteCharacters = atob(base64Data.split(",")[1]);
+  const arrayBuffer = new ArrayBuffer(byteCharacters.length);
+  const byteArray = new Uint8Array(arrayBuffer);
+
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteArray[i] = byteCharacters.charCodeAt(i);
+  }
+
+  return new Blob([arrayBuffer], { type: "image/png" }); 
 }
